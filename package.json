@@ -1,0 +1,22 @@
+{
+  "name": "week_one",
+  "version": "1.0.0",
+  "description": "dropbox_concepts",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "na"
+  },
+  "keywords": [
+    "express"
+  ],
+  "author": "sam",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.1"
+  }
+}
