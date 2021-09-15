@@ -1,3 +1,8 @@
+/*********************************************
+ * RMB:change to localhost:8080, not just click and open
+ * index.html!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *************************************/
+
 const express = require("express");
 const app = express();
 const fileUpload = require("express-fileupload");
@@ -14,21 +19,50 @@ app.use(express.static("pages"));
 // if it's called index.html, just type: localhost:8080 will direct to index.html
 const cache = {};
 const uploadDirectory = __dirname + path.sep + "uploaded";
+function write(name, body) {
+  //file name, body: content of file
+  //use node.js 14.17.6 documentation
+  return new Promise((resolve, reject) => {
+    fs.writeFile("uploaded", name, body, (err) => {
+      // wrong: "uploaded"
+      //file can be: <string> | <Buffer> | <URL> | <integer>
+      if (err) {
+        return reject(err);
+      } else {
+        resolve(body);
+      }
+    });
+  }).then(read); // invoke read fn
+}
 
+function read(filename) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(__dirname + Path2D.sep + filename, data, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+//this part is to understand what need to be / , home directory
+/*
 app.get("/", (req, res) => {
   console.log("initial request ");
   res.sendFile(path.join(__dirname + "/pages/index.html"));
 });
+*/
+
 // home directory, /, is localhost:8080, not equal index.html
 //the reason why we see index.html is bcoz of line20,
 //we ask the server to send back index.html
 
-//if need to test, need a route,app.post/ app.get+res.send
-//i.e.request & response
-//for get request, should not direct to /, coz you'll see / still
-app.get("/data", (req, res) => {
+//if need to test, need a route,app.post/ app.get+res.send   i.e.request & response
+//why not homedirectory / ? for this get request, should not direct to /, coz you'll still see /, ie not going to other pages
+//this part: make a request to server to list out all of the files within the folder uploaded
+app.get("/filesinfolder", (req, res) => {
   console.log("alternative req");
-  //why not homedirectory / ?
   fs.readdir(uploadDirectory, (error, data) => {
     if (error) {
       console.log(error);
