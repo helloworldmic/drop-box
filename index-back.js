@@ -23,13 +23,14 @@ function write(name, body) {
   //file name, body: content of file
   //use node.js 14.17.6 documentation
   return new Promise((resolve, reject) => {
-    fs.writeFile("uploaded", name, body, (err) => {
+    fs.writeFile(uploadDirectory + path.sep + name, body, (err) => {
       // wrong: "uploaded"
       //file can be: <string> | <Buffer> | <URL> | <integer>
       if (err) {
-        return reject(err);
+        console.log(error);
+        reject(err); //no return
       } else {
-        resolve(body);
+        resolve(name); //not body
       }
     });
   }).then(read); // invoke read fn
@@ -37,7 +38,8 @@ function write(name, body) {
 
 function read(filename) {
   return new Promise((resolve, reject) => {
-    fs.readFile(__dirname + Path2D.sep + filename, data, (err, data) => {
+    fs.readFile(uploadDirectory + path.sep + filename, (err, data) => {
+      // no data, not __dirname
       if (err) {
         reject(err);
       } else {
@@ -62,7 +64,7 @@ app.get("/", (req, res) => {
 //why not homedirectory / ? for this get request, should not direct to /, coz you'll still see /, ie not going to other pages
 //this part: make a request to server to list out all of the files within the folder uploaded
 app.get("/filesinfolder", (req, res) => {
-  console.log("alternative req");
+  console.log("hello world");
   fs.readdir(uploadDirectory, (error, data) => {
     if (error) {
       console.log(error);
@@ -74,11 +76,20 @@ app.get("/filesinfolder", (req, res) => {
 });
 //https://www.npmjs.com/package/express-fileupload
 app.post("/", (req, res) => {
-  console.log(req.files.file);
-  if (req.files.file) {
+  console.log("getting here");
+  // console.log(req.files); not req.files.file (looking at its parents is a better way to debug)
+  console.log(req.files.data);
+  if (req.files.data.name) {
+    //all change fr (req.files.file.name), coz indemy.js, ajsx, store as data:formData, not file:formData
+    console.log("inside if"); //put here to check how far the code runs and whether the last line runs, if last line runs, it shows in console.log
     // check existence of file
-    cache[req.files.file] = write(req.files.file.name, req.files.file.data) //wrong: req.files.file
-      .then(res.send(req.files.file.name));
+    cache[req.files.data.name] = write(
+      req.files.data.name,
+      req.files.data.data
+    ); //wrong: req.files.file
+    cache[req.files.data.name].then(() => {
+      res.send(req.files.data.name);
+    });
   }
 });
 // for app.post here, no use to check error
@@ -89,15 +100,17 @@ app.get("/uploaded/:filename", (req, res) => {
   console.log(req.params.filename);
   if (cache[req.params.filename]) {
     console.log("in cache");
-    cache[req.params.filename].then((data) => {
-      res.send(data);
+    cache[req.params.filename].then((body) => {
+      //not:data
+      res.send(body); //not:data
       //not req.files.file.data, coz it's resolved fr write fn
     });
   } else {
     console.log("not in cache");
     cache[req.params.filename] = read(req.params.filename); // add this step if not in cache
-    cache[req.params.filename].then((data) => {
-      res.send(data);
+    cache[req.params.filename].then((body) => {
+      //not: data
+      res.send(body);
     });
   }
 });
